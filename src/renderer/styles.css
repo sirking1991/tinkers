@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+body {
+  @apply bg-dark text-white m-0 p-0 overflow-hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Monaco Editor overrides */
+.monaco-editor .margin {
+  @apply bg-dark-darker;
+}
+
+/* Custom components */
+.editor-container {
+  @apply h-full w-full overflow-hidden;
+}
+
+.output-container {
+  @apply bg-dark-darker p-4 overflow-auto font-mono text-sm;
+}
+
+.output-success {
+  @apply text-green-400;
+}
+
+.output-error {
+  @apply text-red-400;
+}
