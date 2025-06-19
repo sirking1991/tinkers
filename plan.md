@@ -1,0 +1,119 @@
+# Tinkerwell-like Desktop App Plan
+
+## Notes
+- Build a cross-platform (Windows & macOS) desktop app inspired by Tinkerwell.
+- Agreed core tech stack: Electron.js for the shell, React.js for UI, TailwindCSS for styling.
+- Use Electron Forge with Webpack plugin for fast development & packaging.
+- Prefer TypeScript for type safety across main/renderer processes.
+- Monaco Editor will provide an in-app code editor experience.
+- IPC (contextBridge) will handle secure communication between renderer and main.
+- Initial language target for code execution: PHP via the user’s local interpreter; later can add others.
+- GitHub Actions will build signed installers for both OSes.
+- Chosen Electron Forge with Webpack plugin (instead of Vite) for build & packaging.
+- Initial scaffolding files (package.json, tsconfig, forge & webpack configs) created.
+- TailwindCSS and PostCSS configuration files added.
+- Electron main process and preload scripts scaffolded, including code execution IPC.
+- React renderer skeleton with Monaco Editor and output pane scaffolded.
+- Initial code execution engine implemented for PHP & JavaScript in Electron main process.
+- README documentation and .gitignore file added.
+- Snippet persistence implemented using Zustand with localStorage.
+- Snippet management UI integrated into renderer.
+- Physical project files generated; ready to install dependencies and build.
+- Source directories and core source files created on disk.
+- Main App component, global snippet store, and styles added; UI flow largely complete for MVP.
+- Encountered dependency conflict between `monaco-editor` and `react-monaco-editor` during npm install; need to align versions.
+- Dependency conflict resolved by pinning `monaco-editor` to `0.44.0`; `npm install` succeeded.
+- Development build failed due to module import error in `forge.config.ts` (cannot find `webpack.main.config`). Need to correct import paths.
+- After fixing forge.config path, development build still fails: `webpack.main.config.ts` cannot import `webpack.rules`; need to update import paths/extensions and handle ESM/CommonJS.
+- After adjusting webpack import paths, build still fails: unresolved `webpack.rules.ts` in ESM context and undefined `MAIN_WINDOW_WEBPACK_ENTRY`; require further config tweaks (DefinePlugin, file extensions).
+- Added global TypeScript declarations for Forge webpack globals and set `type` to `commonjs` in package.json to address module resolution.
+- Updated import paths in forge and webpack configuration files to include `.ts` extensions; ready to rerun development build.
+- Development build still fails with `Cannot use import statement outside a module`; need to convert webpack/forge configs to CommonJS or properly enable ESM support.
+- Converted forge and all webpack configuration files to CommonJS (`require`); development build now starts successfully with Electron Forge dev servers running.
+- First packaging attempt failed: `@vercel/webpack-asset-relocator-loader` incompatible with Electron Forge; need to update or patch before packaging succeeds.
+- Pinned `@vercel/webpack-asset-relocator-loader` to `1.7.0` and reinstalled dependencies.
+- Packaging (`npm run package`) succeeded; `npm run make` produced macOS ZIP installer; Windows installers still pending.
+- Configured Forge makers for macOS DMG and Windows installers; placeholder icon files added.
+- Installed `@electron-forge/maker-dmg` and updated forge configuration to include DMG maker; placeholder DMG background image added.
+- Removed `osxSign` placeholder to resolve Forge configuration TypeError.
+- `npm run make` currently only delivers macOS ZIP; need DMG & Windows outputs.
+- Fixed DMG maker configuration (removed `${staged_path}`), ready to rerun make.
+- Updated DMG maker `contents` path to packaged app to satisfy `data.contents.1.path` requirement.
+- DMG creation still fails because `assets/dmg-background.png` is empty; need a valid background image asset to proceed.
+- Removed DMG maker temporarily; focusing on ZIP installers for macOS & Windows until assets are prepared.
+- macOS ZIP installer generation reconfirmed; prepare GitHub Actions workflow for automated builds.
+- GitHub Actions workflow `build.yml` created to build ZIP installers on tags and manual dispatch.
+- Icon and DMG background assets generated via canvas scripts (`icon.png`, `dmg-background.png`); ready to convert to platform formats and re-enable DMG maker.
+- DMG maker re-enabled using PNG icon and generated DMG background; forge config syntax fixed.
+- macOS ZIP installer generation reconfirmed; prepare GitHub Actions workflow for automated builds.
+- GitHub Actions workflow `build.yml` created to build ZIP installers on tags and manual dispatch.
+- Updated DMG maker `contents` path to `tinkers.app` to satisfy `data.contents.1.path` requirement; ready to rerun `npm run make`.
+- DMG maker commented out again due to incorrect packaged app path; focusing on ZIP installers until proper `.app` path identified.
+- Encountered white screen at runtime; console shows missing preload script (`.webpack/main/preload.js`) and CSP `unsafe-eval` violation in webpack-dev-server client.
+- Identified that preload source exists at `src/preload/preload.ts`; main process must reference compiled path (e.g., `path.join(__dirname, "../preload/preload.js")`) or adjust Webpack entry to emit preload.
+- Configured `webpack.main.config.js` to include preload script in entry, ensuring bundling.
+- Updated main process to reference `MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY` and disabled webSecurity in dev.
+- Reverted `webpack.main.config.js` to single main entry as Forge plugin handles preload; dev server starts on port 9001 (white screen fix still pending).
+- Renderer DefinePlugin added to relax CSP during development.
+- Renderer `devtool` switched to `source-map` to avoid eval; removed `webSecurity` override.
+- Added specific CSP header in main process to allow `unsafe-eval` during development.
+- Disabled HMR (hot/live reload) in renderer webpack devServer to eliminate eval usage.
+- Updated renderer `index.html` CSP meta tag to allow `unsafe-eval`, inline styles, and websocket connections during development.
+- CSP `unsafe-eval` violation persists; next step is to ensure webpack-dev-server client uses proper devtool or override CSP headers.
+
+## Task List
+- [ ] Confirm detailed feature requirements with the user (languages supported, snippet management, etc.).
+- [ ] Finalize tooling choices (state management library, testing framework).
+- [ ] Scaffold monorepo project structure.
+  - [ ] Initialize git repository.
+  - [x] Create package.json with dependencies.
+  - [x] Add tsconfig.json.
+  - [x] Add forge.config.ts.
+  - [x] Add webpack configuration files (main, renderer, rules, plugins).
+  - [x] Add Tailwind and PostCSS configuration files.
+  - [x] Add Electron main process and link to renderer build.
+  - [x] Configure secure IPC via contextBridge.
+  - [x] Set up React + Tailwind project with Electron Forge & Webpack.
+  - [x] Add README documentation.
+  - [x] Add .gitignore file.
+- [x] Integrate Monaco Editor component in the React UI.
+- [x] Build output pane and error display.
+- [x] Implement code execution engine (PHP) with stdout/stderr capture.
+- [x] Implement session/snippet persistence (local file via Zustand persist).
+- [x] Resolve monaco-editor/react-monaco-editor dependency conflict and update package.json.
+- [x] Install dependencies.
+- [x] Fix import paths in forge and webpack config files (rules/plugins) to resolve dev build errors.
+- [x] Resolve undefined `MAIN_WINDOW_WEBPACK_ENTRY` and ensure webpack resolves `.ts` imports (rules/plugins).
+- [x] Convert some webpack configuration files to CommonJS (`require`).
+- [x] Convert remaining webpack and forge configuration files to CommonJS (`require`) or configure ESM/TypeScript loading to fix "Cannot use import statement outside a module" error.
+- [x] Run development build.
+- [x] Resolve asset relocator loader incompatibility to enable packaging.
+  - [x] Pin asset relocator loader to 1.7.0 and reinstall deps.
+  - [x] Retry packaging and resolve any remaining asset relocator issues.
+- [ ] Package application for Windows & macOS (DMG/EXE installers).
+  - [x] Run `npm run make` for macOS ZIP.
+  - [x] Configure forge makers for macOS DMG and Windows (Squirrel/ZIP).
+  - [ ] Investigate DMG maker integration (`@electron-forge/maker-dmg`) and cross-build limitations on macOS for Windows installers.
+  - [x] Provide production-ready icon assets for packaging (initial PNG generated).
+  - [x] Provide non-empty DMG background image asset (`assets/dmg-background.png`).
+  - [ ] Convert icon.png to `.icns` and `.ico` and update forge config.
+  - [x] Re-add DMG maker after assets are prepared.
+  - [x] Fix DMG `data.contents` path error (`data.contents.1.path is required`).
+- [ ] Set up CI/CD (GitHub Actions) for automated builds and releases.
+  - [x] Create GitHub Actions workflow to build macOS & Windows ZIP installers.
+- [ ] Perform testing (unit/e2e) and QA passes.
+- [ ] Release MVP and gather user feedback.
+- [ ] Fix white screen runtime errors:
+  - [x] Ensure preload script is emitted and correct path set in `BrowserWindow` options.
+  - [x] Update main process to use `MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY`.
+  - [x] Switch renderer `devtool` to `source-map` to avoid `eval`.
+  - [x] Disable HMR in renderer webpack config to remove eval usage.
+  - [x] Add specific CSP header in main process to allow `unsafe-eval` in dev.
+  - [x] Update renderer index.html CSP meta tag to align with dev CSP (allow websocket & inline styles).
+  - [ ] Verify CSP violation is resolved and renderer displays UI.
+  - [x] Remove redundant preload entry from `webpack.main.config.js`.
+  - [x] Add global.d.ts declaration for `MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY`.
+  - [x] Resolve dev server port conflict (EADDRINUSE) by using `PORT=9001`.
+
+## Current Goal
+- Verify renderer displays UI after CSP fixes.
